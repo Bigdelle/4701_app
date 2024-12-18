@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Sentiment Analysis</h2>
+<form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="file" class="form-label">Upload a File</label>
+        <input type="file" class="form-control" id="file" name="file">
+    </div>
+    <button type="submit" class="btn btn-primary">Analyze Sentiment</button>
+</form>
+
+{% if results %}
+<h3 class="mt-4">Analysis Results</h3>
+<table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>Ticker</th>
+            <th>Sentiment</th>
+            <th>Intensity</th>
+            <th>Probability Negative</th>
+            <th>Probability Neutral</th>
+            <th>Probability Positive</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in results %}
+        <tr>
+            <td>{{ row.ticker }}</td>
+            <td>{{ row.finbert_sentiment }}</td>
+            <td>{{ row.sentiment_intensity }}</td>
+            <td>{{ row.mean_neg_prob }}</td>
+            <td>{{ row.mean_neu_prob }}</td>
+            <td>{{ row.mean_pos_prob }}</td>
+        </tr>
+        <p class="mt-4">
+            {{ row.explanation }}
+        </p>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% for message in get_flashed_messages() %}
+<div class="alert alert-danger mt-3">{{ message }}</div>
+{% endfor %}
+{% endblock %}

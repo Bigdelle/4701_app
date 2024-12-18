@@ -1,0 +1,5 @@
+Model,Average MAE
+Moving Average MAE,3.2655670166015613
+Naive MAE,2.3583328247070314
+Linear Regression MAE,4.647742180193545
+Exponential Smoothing MAE,2.3678716259535673

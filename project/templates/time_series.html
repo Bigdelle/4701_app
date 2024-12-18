@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Time Series Analysis</h2>
+
+<form method="POST" enctype="multipart/form-data" class="mb-4">
+    <div class="mb-3">
+        <label for="ticker" class="form-label">Stock Ticker</label>
+        <input type="text" class="form-control" id="ticker" name="ticker" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="file" class="form-label">Optional: Upload Earnings Call File</label>
+        <input type="file" class="form-control" id="file" name="file">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Generate Predictions</button>
+</form>
+
+{% if predictions is defined and predictions is not none %}
+<div class="mt-4">
+    <h3>Price Predictions for {{ ticker }}</h3>
+    
+    <!-- Add canvas for Chart.js -->
+    <div class="chart-container" style="position: relative; height:400px; width:100%; margin-bottom: 2rem;">
+        <canvas id="predictionsChart"></canvas>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Predicted Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prediction in predictions %}
+                <tr>
+                    <td>Day {{ loop.index }}</td>
+                    <td>${{ "%.2f"|format(prediction) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if sentiment_score %}
+    <div class="alert alert-info mt-3">
+        <strong>Earnings Call Sentiment Score:</strong> {{ "%.2f"|format(sentiment_score) }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Pass data to JavaScript -->
+<script>
+    var predictionData = JSON.parse('{{ predictions|tojson|safe }}');
+</script>
+
+<!-- Initialize the chart -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('predictionsChart').getContext('2d');
+    
+    // Create labels array
+    const labels = predictionData.map((_, index) => `Day ${index + 1}`);
+    
+    // Create the chart
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Predicted Price ($)',
+                data: predictionData,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Price Predictions Over Time'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `$${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endif %}
+
+{% for message in get_flashed_messages() %}
+<div class="alert alert-{{ message.category|default('success') }} mt-3">
+    {{ message }}
+</div>
+{% endfor %}
+
+{% endblock %}
